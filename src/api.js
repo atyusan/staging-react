@@ -1,11 +1,5 @@
-const proxyTarget = import.meta.env.VITE_API_PROXY_TARGET;
-
-const API_BASE =
-  import.meta.env.PROD &&
-  proxyTarget?.startsWith('http') &&
-  !proxyTarget.includes('localhost')
-    ? `${proxyTarget.replace(/\/$/, '')}/api`
-    : '/api';
+// Dev/preview: use /api (proxied by Vite). Production: set VITE_API_URL to your backend API base.
+const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '/api';
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -25,9 +19,12 @@ async function request(path, options = {}) {
 
   if (!isJson) {
     const text = await response.text();
+    const isHtml = text.trimStart().startsWith('<!');
     throw new Error(
       response.ok
-        ? 'Unexpected response from server'
+        ? isHtml
+          ? 'API not reachable. Set VITE_API_URL to your backend URL when building for production.'
+          : 'Unexpected response from server'
         : text || `Request failed (${response.status})`
     );
   }

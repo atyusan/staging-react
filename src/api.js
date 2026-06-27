@@ -1,7 +1,10 @@
-// Dev/preview: use /api (proxied by Vite). Production: set VITE_API_URL to your backend API base.
-const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '/api';
+const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 async function request(path, options = {}) {
+  if (!API_BASE) {
+    throw new Error('VITE_API_URL is not configured');
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -23,7 +26,7 @@ async function request(path, options = {}) {
     throw new Error(
       response.ok
         ? isHtml
-          ? 'API not reachable. Set VITE_API_URL to your backend URL when building for production.'
+          ? 'API not reachable. Check that VITE_API_URL points to your backend.'
           : 'Unexpected response from server'
         : text || `Request failed (${response.status})`
     );

@@ -13,7 +13,19 @@ async function request(path, options = {}) {
     return null;
   }
 
-  const data = await response.json().catch(() => ({}));
+  const contentType = response.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+
+  if (!isJson) {
+    const text = await response.text();
+    throw new Error(
+      response.ok
+        ? 'Unexpected response from server'
+        : text || `Request failed (${response.status})`
+    );
+  }
+
+  const data = await response.json();
 
   if (!response.ok) {
     throw new Error(data.error || 'Request failed');
@@ -23,7 +35,13 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  getPosts: () => request('/posts'),
+  getPosts: async () => {
+    const data = await request('/posts');
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid response from server');
+    }
+    return data;
+  },
   getPost: (id) => request(`/posts/${id}`),
   createPost: (post) =>
     request('/posts', {

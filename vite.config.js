@@ -7,16 +7,22 @@ export default defineConfig(({ mode }) => {
   const port = Number(env.VITE_DEV_SERVER_PORT) || 5173;
   const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:4001';
 
+  const apiProxy = {
+    '/api': {
+      target: proxyTarget,
+      changeOrigin: true,
+    },
+  };
+
   return {
     plugins: [react()],
     server: {
       port,
-      proxy: {
-        '/api': {
-          target: proxyTarget,
-          changeOrigin: true,
-        },
-      },
+      proxy: apiProxy,
+    },
+    preview: {
+      port: Number(env.VITE_PREVIEW_PORT) || 4173,
+      proxy: apiProxy,
     },
   };
 });
